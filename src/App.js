@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 
-const msPerInterval = 10;
+const msPerInterval = 1000;
 
 const defaultState = {
 	breakLength: 5,
@@ -28,8 +28,8 @@ class App extends React.Component {
 				lapsedTime: prevState.lapsedTime + 1,
 			}),
 			() => {
-				// console.log(this.remainingSeconds(), 'remaining Secs');
-				if (this.remainingSeconds() <= 0) {
+				// once the timer is at zero, play the beep sound, reset lapsedTime to zero, and change the mode
+				if (this.remainingSeconds() < 0) {
 					this.audioRef.current.play();
 					setTimeout(() => this.audioRef.current.load(), 5000);
 
@@ -43,18 +43,21 @@ class App extends React.Component {
 	};
 
 	startStopTimer = () => {
+		// if an interval is currently running, clear it (stops the timer)
 		if (this.intervalId) {
 			clearInterval(this.intervalId);
 			this.intervalId = null;
+			// if no interval is running (timer is stoped), then start a new one
 		} else {
 			this.intervalId = setInterval(() => this.tick(), msPerInterval);
 		}
-		// console.log('running');
 	};
 
+	// method to convert lapsedTime (runs once every msPerInterval)
 	passedSeconds = () => (this.state.lapsedTime / 1000) * msPerInterval;
 
 	remainingSeconds = () => {
+		// retrieve totalDuration based on the current mode
 		const totalDuration =
 			this.state.mode === 'session'
 				? this.state.sessionLength * 60
@@ -65,6 +68,7 @@ class App extends React.Component {
 		return remainingSeconds;
 	};
 
+	// convert number of seconds to a mm:ss string
 	remainingTime = () => {
 		const totalSeconds = this.remainingSeconds();
 
@@ -86,8 +90,10 @@ class App extends React.Component {
 			this.intervalId = null;
 		}
 
+		// rewind the audio element
 		this.audioRef.current.load();
 
+		// reset state to its default
 		this.setState({
 			...defaultState,
 		});
@@ -117,9 +123,11 @@ class App extends React.Component {
 				className='container-fluid bg-dark'
 				style={{position: 'fixed', top: '0', left: '0', right: '0', bottom: '0'}}
 			>
-				<h1 className='text-center text-light mt-4'>Pomodoro clock</h1>
+				<h1 className='text-center text-light' id='header'>
+					Pomodoro clock
+				</h1>
 
-				<div className='d-flex justify-content-around text-light mt-4'>
+				<div className='d-flex justify-content-around text-light mt-1'>
 					<div className='text-center' id='break-control-container'>
 						<div className='text-center' id='break-label'>
 							Break Length
@@ -180,24 +188,22 @@ class App extends React.Component {
 					id='start_stop'
 					onClick={this.startStopTimer}
 				>
-					<div className='session-container'>
-						<div className='text-center' id='timer-label'>
+					<div className='session-container text-center'>
+						<div id='timer-label'>
 							{this.state.mode === 'session' ? 'Current Session' : 'Current Break'}
 						</div>
-						<h2 className='text-center' id='time-left'>
-							{remainingTime}
-						</h2>
+						<div id='time-left'>{console.log(remainingTime, 'rem') || remainingTime}</div>
 						<audio
 							id='beep'
 							preload='auto'
 							ref={this.audioRef}
 							src='https://raw.githubusercontent.com/freeCodeCamp/cdn/master/build/testable-projects-fcc/audio/BeepSound.wav'
 						/>
-						<div>{this.state.lapsedTime}</div>
+						{/* <div>{this.state.lapsedTime}</div> */}
 					</div>
 				</div>
 
-				<div className='d-flex justify-content-center mt-4'>
+				<div className='d-flex justify-content-center mt-2'>
 					<button
 						className='btn btn-primary text-center'
 						id='reset'
